@@ -1,4 +1,4 @@
-# FROM nvidia/cuda:12.1.0-base-ubuntu22.04 
+# FROM nvidia/cuda:12.1.0-base-ubuntu22.04
 
 
 # RUN ldconfig /usr/local/cuda-12.1/compat/
@@ -25,7 +25,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --upgrade -r /requirements.txt
 
 # RUN pip install --upgrade torch --index-url https://download.pytorch.org/whl/cu121
-    
+
 # RUN git clone https://github.com/runpod-workers/axolotl.git && \
 #     cd axolotl && \
 #     pip install packaging ninja && \
@@ -39,6 +39,8 @@ ENV BASE_VOLUME=$BASE_VOLUME
 ENV HF_DATASETS_CACHE="${BASE_VOLUME}/huggingface-cache/datasets"
 ENV HUGGINGFACE_HUB_CACHE="${BASE_VOLUME}/huggingface-cache/hub"
 ENV TRANSFORMERS_CACHE="${BASE_VOLUME}/huggingface-cache/hub"
+ENV GSC_BUCKET_NAME=${GSC_BUCKET_NAME}
+ENV GCS_PROJECT_ID=${GCS_PROJECT_ID}
 
 
 # Add src files (Worker Template)
