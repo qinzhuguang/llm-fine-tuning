@@ -41,6 +41,7 @@ ENV HUGGINGFACE_HUB_CACHE="${BASE_VOLUME}/huggingface-cache/hub"
 ENV TRANSFORMERS_CACHE="${BASE_VOLUME}/huggingface-cache/hub"
 ENV GSC_BUCKET_NAME=${GSC_BUCKET_NAME}
 ENV GCS_PROJECT_ID=${GCS_PROJECT_ID}
+ENV GCP_SA_KEY=${GCP_SA_KEY}
 
 
 # Add src files (Worker Template)
