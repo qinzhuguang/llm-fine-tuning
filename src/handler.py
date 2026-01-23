@@ -41,6 +41,9 @@ def upload_to_gcs(local_dir: str, bucket_name: str, gcs_path: str):
         for file in files:
             local_path = os.path.join(root, file)
             rel_path = os.path.relpath(local_path, local_dir)
+            # 过滤包含checkpoint-的文件夹
+            if os.path.isdir(local_path) and "checkpoint-" in rel_path:
+                continue
             blob = bucket.blob(f"{gcs_path}/{rel_path}")
             blob.upload_from_filename(local_path)
             uploaded_files += 1
@@ -114,13 +117,14 @@ async def handler(job):
     # ============ 新增：训练完成后上传 GCS ============
     try:
         bucket_name = os.environ["GSC_BUCKET_NAME"]  # 从 env 获取（后面 endpoint 配置）
+        gsc_finetuned_model_path = os.environ["GSC_FINETUNED_MODEL_PATH"]
         # 用 run_id 作为模型名，或从 inputs 添加自定义 "model_name"
         model_name = inputs.get("model_name", run_id)  # 推荐在调用时加 "model_name"
 
-        gcs_path = f"fine-tuned/{user_id}/{model_name}"
+        gcs_path = f"{gsc_finetuned_model_path}/{user_id}/{model_name}"
         if hub_model_id:
             hub_model_id = hub_model_id.split("-")[-1]
-            gcs_path = f"fine-tuned/{user_id}/{hub_model_id}"
+            gcs_path = f"{gsc_finetuned_model_path}/{user_id}/{hub_model_id}"
 
         upload_to_gcs(output_dir, bucket_name, gcs_path)
 
