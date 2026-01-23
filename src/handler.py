@@ -40,8 +40,7 @@ def upload_to_gcs(local_dir: str, bucket_name: str, gcs_path: str):
     for root, _, files in os.walk(local_dir):
         for file in files:
             local_path = os.path.join(root, file)
-            rel_path = os.path.relpath(local_path, local_dir)
-            blob = bucket.blob(f"{gcs_path}/{rel_path}")
+            blob = bucket.blob(f"{gcs_path}")
             blob.upload_from_filename(local_path)
             uploaded_files += 1
     logger.info(f"Uploaded {uploaded_files} files to gs://{bucket_name}/{gcs_path}")
@@ -87,6 +86,8 @@ async def handler(job):
     # Add run_name and job_id to args before saving
     args["run_name"] = run_id
     args["runpod_job_id"] = runpod_job_id
+    hub_model_id = args.get("hub_model_id")
+    args["hub_model_id"] = None
 
     yaml_data = yaml.dump(args, default_flow_style=False)
     with open(config_path, "w") as file:
@@ -114,11 +115,11 @@ async def handler(job):
         bucket_name = os.environ["GSC_BUCKET_NAME"]  # 从 env 获取（后面 endpoint 配置）
         # 用 run_id 作为模型名，或从 inputs 添加自定义 "model_name"
         model_name = inputs.get("model_name", run_id)  # 推荐在调用时加 "model_name"
-        hub_model_id = args.get('hub_model_id')
+
         gcs_path = f"fine-tuned/{user_id}/{model_name}"
         if hub_model_id:
-            hub_model_id = hub_model_id.split('-')[-1]
-            gcs_path = f'fine-tuned/{user_id}/{hub_model_id}'
+            hub_model_id = hub_model_id.split("-")[-1]
+            gcs_path = f"fine-tuned/{user_id}/{hub_model_id}"
 
         upload_to_gcs(output_dir, bucket_name, gcs_path)
 
