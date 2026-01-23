@@ -40,7 +40,8 @@ def upload_to_gcs(local_dir: str, bucket_name: str, gcs_path: str):
     for root, _, files in os.walk(local_dir):
         for file in files:
             local_path = os.path.join(root, file)
-            blob = bucket.blob(f"{gcs_path}")
+            rel_path = os.path.relpath(local_path, local_dir)
+            blob = bucket.blob(f"{gcs_path}/{rel_path}")
             blob.upload_from_filename(local_path)
             uploaded_files += 1
     logger.info(f"Uploaded {uploaded_files} files to gs://{bucket_name}/{gcs_path}")
