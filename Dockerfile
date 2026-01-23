@@ -19,6 +19,12 @@
 # # Python dependencies
 FROM axolotlai/axolotl-cloud:main-latest
 
+# 添加镜像元数据描述
+LABEL name="llm-fine-tuning-container"
+LABEL version="1.0.0"
+LABEL description="Upload to Google Cloud Storage (GCS), replacing the upload to HuggingFace."
+LABEL license="MIT"
+
 COPY builder/requirements.txt /requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --upgrade pip && \

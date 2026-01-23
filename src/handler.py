@@ -1,15 +1,13 @@
 import json
 import os
-import shutil  # 新增：用于清理
+import shutil
 
 import runpod
 import yaml
-from google.cloud import storage  # 新增：GCS 上传
+from google.cloud import storage  # GCS 上传
 from google.oauth2.service_account import Credentials
-from huggingface_hub._login import login
 
 from train import train
-from utils import get_output_dir, make_valid_config, set_config_env_vars, validate_env
 
 BASE_VOLUME = os.environ.get("BASE_VOLUME", "/runpod-volume")
 if not os.path.exists(BASE_VOLUME):
@@ -18,7 +16,7 @@ if not os.path.exists(BASE_VOLUME):
 logger = runpod.RunPodLogger()
 
 
-# 新增：GCS 上传函数
+# GCS 上传函数
 def upload_to_gcs(local_dir: str, bucket_name: str, gcs_path: str):
     # 从 Secret 加载凭证 JSON
     sa_key_json = os.environ.get("GCP_SA_KEY")
@@ -55,16 +53,20 @@ def cleanup_output(output_dir: str):
         logger.info(f"Cleaned local output dir: {output_dir}")
 
 
+def get_output_dir(run_id):
+    path = f"fine-tuning/{run_id}"
+    return path
+
+
 async def handler(job):
     runpod_job_id = job["id"]
     inputs = job["input"]
     run_id = inputs["run_id"]
+    user_id = inputs["user_id"]
     args = inputs["args"]
 
-    # set_config_env_vars(args)
-
     # Set output directory
-    output_dir = os.path.join(BASE_VOLUME, get_output_dir(run_id))
+    output_dir = os.path.join(BASE_VOLUME, get_output_dir(run_id), user_id)
     args["output_dir"] = output_dir
 
     # First save args to a temporary config file
@@ -78,29 +80,17 @@ async def handler(job):
     with open(config_path, "w") as file:
         file.write(yaml_data)
 
-    # Handle credentials
-    credentials = inputs["credentials"]
-    os.environ["WANDB_API_KEY"] = credentials["wandb_api_key"]
-    os.environ["HF_TOKEN"] = credentials["hf_token"]
-
-    validate_env(logger, runpod_job_id)
-    login(token=os.environ["HF_TOKEN"])
-
-    logger.info(f"Starting Training.")
+    logger.info("Starting Training.")
     async for result in train(config_path):  # Pass the config path instead of args
         logger.info(result)
-    logger.info(f"Training Complete.")
-
-    # Cleanup
-    del os.environ["WANDB_API_KEY"]
-    del os.environ["HF_TOKEN"]
+    logger.info("Training Complete.")
 
     # ============ 新增：训练完成后上传 GCS ============
     try:
         bucket_name = os.environ["GSC_BUCKET_NAME"]  # 从 env 获取（后面 endpoint 配置）
         # 用 run_id 作为模型名，或从 inputs 添加自定义 "model_name"
         model_name = inputs.get("model_name", run_id)  # 推荐在调用时加 "model_name"
-        gcs_path = f"fine-tuned/{model_name}"
+        gcs_path = f"fine-tuned/{user_id}/{model_name}"
 
         upload_to_gcs(output_dir, bucket_name, gcs_path)
 
