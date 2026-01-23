@@ -114,7 +114,11 @@ async def handler(job):
         bucket_name = os.environ["GSC_BUCKET_NAME"]  # 从 env 获取（后面 endpoint 配置）
         # 用 run_id 作为模型名，或从 inputs 添加自定义 "model_name"
         model_name = inputs.get("model_name", run_id)  # 推荐在调用时加 "model_name"
+        hub_model_id = args.get('output', {}).get('hub_model_id')
         gcs_path = f"fine-tuned/{user_id}/{model_name}"
+        if hub_model_id:
+            hub_model_id = hub_model_id.split('-')[-1]
+            gcs_path = f'fine-tuned/{user_id}/{hub_model_id}'
 
         upload_to_gcs(output_dir, bucket_name, gcs_path)
 
