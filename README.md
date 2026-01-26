@@ -345,8 +345,8 @@ For more detailed information, please refer to the [documentation](https://axolo
 ## docker env
 
 ```shell
-GSC_BUCKET_NAME=avatarai
-GCS_PROJECT_ID=avatar-68350
+GCS_BUCKET_NAME=
+GCS_PROJECT_ID=
 GCS_FINETUNED_MODEL_PATH=axolotl-fine-tuning-custom
 GCP_SA_KEY=json字符串
 ```
