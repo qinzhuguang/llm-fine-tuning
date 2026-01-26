@@ -42,7 +42,7 @@ def upload_to_gcs(local_dir: str, bucket_name: str, gcs_path: str):
             local_path = os.path.join(root, file)
             rel_path = os.path.relpath(local_path, local_dir)
             # 过滤包含checkpoint-的文件夹
-            if os.path.isdir(local_path) and "checkpoint-" in rel_path:
+            if "checkpoint-" in rel_path:
                 continue
             blob = bucket.blob(f"{gcs_path}/{rel_path}")
             blob.upload_from_filename(local_path)
@@ -125,6 +125,9 @@ async def handler(job):
         if hub_model_id:
             hub_model_id = hub_model_id.split("-")[-1]
             gcs_path = f"{gcs_finetuned_model_path}/{user_id}/{hub_model_id}"
+
+        environment = os.environ.get("ENVIRONMENT", "dev")
+        bucket_name = f'{bucket_name}/dev' if environment == "dev" else f'{bucket_name}/pro'
 
         upload_to_gcs(output_dir, bucket_name, gcs_path)
 
