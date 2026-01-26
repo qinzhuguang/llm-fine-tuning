@@ -20,9 +20,9 @@ logger = runpod.RunPodLogger()
 # GCS 上传函数
 def upload_to_gcs(local_dir: str, bucket_name: str, gcs_path: str):
     # 从 Secret 加载凭证 JSON
-    sa_key_json = os.environ.get("GCP_SA_KEY")
+    sa_key_json = os.environ.get("GCS_SA_KEY")
     if not sa_key_json:
-        raise ValueError("GCP_SA_KEY secret not found!")
+        raise ValueError("GCS_SA_KEY secret not found!")
 
     key_info = json.loads(sa_key_json)  # 转为 dict
 

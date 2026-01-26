@@ -348,5 +348,5 @@ For more detailed information, please refer to the [documentation](https://axolo
 GCS_BUCKET_NAME=
 GCS_PROJECT_ID=
 GCS_FINETUNED_MODEL_PATH=axolotl-fine-tuning-custom
-GCP_SA_KEY=json字符串
+GCS_SA_KEY=json字符串
 ```
