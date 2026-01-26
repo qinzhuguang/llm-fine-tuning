@@ -118,6 +118,11 @@ async def handler(job):
     try:
         bucket_name = os.environ["GCS_BUCKET_NAME"]  # 从 env 获取（后面 endpoint 配置）
         gcs_finetuned_model_path = os.environ["GCS_FINETUNED_MODEL_PATH"]
+
+        environment = os.environ.get("ENVIRONMENT", "dev")
+        gcs_finetuned_model_path = (
+            f"{gcs_finetuned_model_path}/dev" if environment == "dev" else f"{gcs_finetuned_model_path}/pro"
+        )
         # 用 run_id 作为模型名，或从 inputs 添加自定义 "model_name"
         model_name = inputs.get("model_name", run_id)  # 推荐在调用时加 "model_name"
 
@@ -125,9 +130,6 @@ async def handler(job):
         if hub_model_id:
             hub_model_id = hub_model_id.split("-")[-1]
             gcs_path = f"{gcs_finetuned_model_path}/{user_id}/{hub_model_id}"
-
-        environment = os.environ.get("ENVIRONMENT", "dev")
-        bucket_name = f'{bucket_name}/dev' if environment == "dev" else f'{bucket_name}/pro'
 
         upload_to_gcs(output_dir, bucket_name, gcs_path)
 
