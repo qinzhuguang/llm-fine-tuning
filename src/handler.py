@@ -116,15 +116,15 @@ async def handler(job):
 
     # ============ 新增：训练完成后上传 GCS ============
     try:
-        bucket_name = os.environ["GSC_BUCKET_NAME"]  # 从 env 获取（后面 endpoint 配置）
-        gsc_finetuned_model_path = os.environ["GSC_FINETUNED_MODEL_PATH"]
+        bucket_name = os.environ["GCS_BUCKET_NAME"]  # 从 env 获取（后面 endpoint 配置）
+        gcs_finetuned_model_path = os.environ["GCS_FINETUNED_MODEL_PATH"]
         # 用 run_id 作为模型名，或从 inputs 添加自定义 "model_name"
         model_name = inputs.get("model_name", run_id)  # 推荐在调用时加 "model_name"
 
-        gcs_path = f"{gsc_finetuned_model_path}/{user_id}/{model_name}"
+        gcs_path = f"{gcs_finetuned_model_path}/{user_id}/{model_name}"
         if hub_model_id:
             hub_model_id = hub_model_id.split("-")[-1]
-            gcs_path = f"{gsc_finetuned_model_path}/{user_id}/{hub_model_id}"
+            gcs_path = f"{gcs_finetuned_model_path}/{user_id}/{hub_model_id}"
 
         upload_to_gcs(output_dir, bucket_name, gcs_path)
 
