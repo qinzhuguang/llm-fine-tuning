@@ -18,21 +18,13 @@ logger = runpod.RunPodLogger()
 
 
 # GCS 上传函数
-def upload_to_gcs(local_dir: str, bucket_name: str, gcs_path: str):
-    # 从 Secret 加载凭证 JSON
-    sa_key_json = os.environ.get("GCS_SA_KEY")
-    if not sa_key_json:
-        raise ValueError("GCS_SA_KEY secret not found!")
+async def upload_to_gcs(local_dir: str, bucket_name: str, project_id: str, credentials_json: str, gcs_path: str):
+    key_info = json.loads(credentials_json)
 
-    key_info = json.loads(sa_key_json)  # 转为 dict
+    # 创建 credentials
+    credentials = Credentials.from_service_account_info(key_info)
 
-    # 创建 credentials（自动包含 scopes 如 cloud-platform）
-    credentials = Credentials.from_service_account_info(
-        key_info, scopes=["https://www.googleapis.com/auth/cloud-platform"]
-    )
-
-    # 创建 client，手动传入 credentials（可选指定 project）
-    project_id = key_info.get("project_id")  # 或 os.environ.get("GCS_PROJECT_ID")
+    # 创建 client，手动传入 credentials）
     client = storage.Client(credentials=credentials, project=project_id)
 
     bucket = client.bucket(bucket_name)
@@ -79,7 +71,6 @@ async def handler(job):
     run_id = inputs["run_id"]
     user_id = inputs["user_id"]
     args = inputs["args"]
-    environment = inputs["environment"]
 
     # Set output directory
     output_dir = os.path.join(BASE_VOLUME, get_output_dir(run_id), user_id)
@@ -117,19 +108,22 @@ async def handler(job):
 
     # ============ 新增：训练完成后上传 GCS ============
     try:
-        bucket_name = os.environ["GCS_BUCKET_NAME"]  # 从 env 获取（后面 endpoint 配置）
-        gcs_finetuned_model_path = os.environ["GCS_FINETUNED_MODEL_PATH"]
+        environment = inputs["environment"]
+        gcs_config = inputs["gcs_config"]
+        bucket_name = gcs_config["bucket_name"]
+        project_id = gcs_config["project_id"]
+        credentials_json = gcs_config["credentials_json"]
+        gcs_finetuned_model_path = f"{gcs_config['gcs_finetuned_model_path']}/{environment}"
+        hub_model_id = hub_model_id.split("-")[-1]
+        gcs_path = f"{gcs_finetuned_model_path}/{user_id}/{hub_model_id}"
 
-        gcs_finetuned_model_path = f"{gcs_finetuned_model_path}/{environment}"
-        # 用 run_id 作为模型名，或从 inputs 添加自定义 "model_name"
-        model_name = inputs.get("model_name", run_id)  # 推荐在调用时加 "model_name"
-
-        gcs_path = f"{gcs_finetuned_model_path}/{user_id}/{model_name}"
-        if hub_model_id:
-            hub_model_id = hub_model_id.split("-")[-1]
-            gcs_path = f"{gcs_finetuned_model_path}/{user_id}/{hub_model_id}"
-
-        upload_to_gcs(output_dir, bucket_name, gcs_path)
+        await upload_to_gcs(
+            local_dir=output_dir,
+            bucket_name=bucket_name,
+            project_id=project_id,
+            credentials_json=credentials_json,
+            gcs_path=gcs_path,
+        )
 
         # 可选：上传后清理（释放 Volume 空间，如果推理用别的 endpoint）
         cleanup_output(output_dir)
