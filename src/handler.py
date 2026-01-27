@@ -79,6 +79,7 @@ async def handler(job):
     run_id = inputs["run_id"]
     user_id = inputs["user_id"]
     args = inputs["args"]
+    environment = inputs["ENVIRONMENT"]
 
     # Set output directory
     output_dir = os.path.join(BASE_VOLUME, get_output_dir(run_id), user_id)
@@ -119,10 +120,7 @@ async def handler(job):
         bucket_name = os.environ["GCS_BUCKET_NAME"]  # 从 env 获取（后面 endpoint 配置）
         gcs_finetuned_model_path = os.environ["GCS_FINETUNED_MODEL_PATH"]
 
-        environment = os.environ.get("ENVIRONMENT", "dev")
-        gcs_finetuned_model_path = (
-            f"{gcs_finetuned_model_path}/dev" if environment == "dev" else f"{gcs_finetuned_model_path}/pro"
-        )
+        gcs_finetuned_model_path = f"{gcs_finetuned_model_path}/{environment}"
         # 用 run_id 作为模型名，或从 inputs 添加自定义 "model_name"
         model_name = inputs.get("model_name", run_id)  # 推荐在调用时加 "model_name"
 
