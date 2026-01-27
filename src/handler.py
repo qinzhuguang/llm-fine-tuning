@@ -108,12 +108,11 @@ async def handler(job):
 
     # ============ 新增：训练完成后上传 GCS ============
     try:
-        environment = inputs["environment"]
         gcs_config = inputs["gcs_config"]
         bucket_name = gcs_config["bucket_name"]
         project_id = gcs_config["project_id"]
         credentials_json = gcs_config["credentials_json"]
-        gcs_finetuned_model_path = f"{gcs_config['gcs_finetuned_model_path']}/{environment}"
+        gcs_finetuned_model_path = f"{gcs_config['gcs_finetuned_model_path']}"
         hub_model_id = hub_model_id.split("-")[-1]
         gcs_path = f"{gcs_finetuned_model_path}/{user_id}/{hub_model_id}"
 
