@@ -79,7 +79,7 @@ async def handler(job):
     run_id = inputs["run_id"]
     user_id = inputs["user_id"]
     args = inputs["args"]
-    environment = inputs["ENVIRONMENT"]
+    environment = inputs["environment"]
 
     # Set output directory
     output_dir = os.path.join(BASE_VOLUME, get_output_dir(run_id), user_id)
